@@ -1,11 +1,15 @@
-const { generateComponentChunkName } = require(`gatsby/dist/utils/js-chunk-names`)
-const _ = require(`lodash`)
+const {
+  generateComponentChunkName,
+} = require(`gatsby/dist/utils/js-chunk-names`);
+const _ = require(`lodash`);
+const { createContentDigest, createNodeId } = require(`gatsby-core-utils`);
 
-const pascalCase = _.flow(_.camelCase, _.upperFirst)
+const pascalCase = _.flow(_.camelCase, _.upperFirst);
 
-exports.createComponent = ({ component, actions, createContentDigest, createNodeId }) => {
-  const { createNode } = actions
-
+/**
+ * Creates Component Node and which as a side effect registers the component into webpack's build
+ */
+exports.createComponentNode = ({ component }) => {
   const node = {
     id: createNodeId(`component-${component}`),
     componentPath: component,
@@ -14,12 +18,16 @@ exports.createComponent = ({ component, actions, createContentDigest, createNode
     internal: {
       type: `Component`,
     },
-  }
+  };
 
-  node.internal.contentDigest = createContentDigest(JSON.stringify(node))
-  createNode(node)
-}
+  node.internal.contentDigest = createContentDigest(JSON.stringify(node));
 
+  return node;
+};
+
+/**
+ * Helper function to create resolver field which returns the previously registered component
+ */
 exports.createResolverField = ({ component }) => {
   return {
     type: `GraphQLComponent`,
@@ -34,7 +42,7 @@ exports.createResolverField = ({ component }) => {
         },
         type: `Component`,
         firstOnly: true,
-      })
+      });
 
       return {
         ___graphQLComponent: node
@@ -44,7 +52,7 @@ exports.createResolverField = ({ component }) => {
               componentName: node.componentName,
             }
           : null,
-      }
+      };
     },
-  }
-}
+  };
+};
