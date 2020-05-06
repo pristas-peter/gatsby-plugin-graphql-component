@@ -8,7 +8,7 @@
     "graphql-type-json": "^0.3.1",
     "lodash": "^4.17.15"
   },
-  "description": "Query React Component in Graphql queries",
+  "description": "Query React Components in Gatsby GraphQL queries",
   "author": "Peter Pristas <pristas.peter@gmail.com>",
   "bugs": {
     "url": "https://github.com/pristas-peter/gatsby-plugin-graphql-component/issues"
