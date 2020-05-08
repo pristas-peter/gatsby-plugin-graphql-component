@@ -1,8 +1,11 @@
+const _ = require(`lodash`);
 const {
   generateComponentChunkName,
 } = require(`gatsby/dist/utils/js-chunk-names`);
-const _ = require(`lodash`);
-const { createContentDigest, createNodeId } = require(`gatsby-core-utils`);
+const { createContentDigest } = require(`gatsby-core-utils`);
+const { createNodeId } = require("gatsby/dist/utils/create-node-id");
+
+const { name } = require("./package.json");
 
 const pascalCase = _.flow(_.camelCase, _.upperFirst);
 
@@ -11,7 +14,7 @@ const pascalCase = _.flow(_.camelCase, _.upperFirst);
  */
 exports.createComponentNode = ({ component }) => {
   const node = {
-    id: createNodeId(`component-${component}`),
+    id: createNodeId(`component-${component}`, name),
     componentPath: component,
     componentName: `Component${pascalCase(component)}`,
     componentChunkName: generateComponentChunkName(component),
