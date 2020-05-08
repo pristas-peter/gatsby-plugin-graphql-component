@@ -61,7 +61,7 @@ exports.createPages = async ({ getNodesByType, store }) => {
 const preferDefault = m => m && m.default || m
 \n\n`
   syncRequires += `exports.components = {\n${nodes
-    .map(node => `  "${node.componentChunkName}": ${hotMethod}(preferDefault(require("${node.componentPath}")))`)
+    .map((node) => `  "${node.componentChunkName}": ${hotMethod}(preferDefault(require("${node.componentPath}")))`)
     .join(`,\n`)}
 }\n\n`
 
@@ -69,15 +69,21 @@ const preferDefault = m => m && m.default || m
 
 const preferDefault = m => m && m.default || m
 exports.components = {\n${nodes
-    .map(node => {
+    .map((node) => {
       return `  "${node.componentChunkName}": () => import("${node.componentPath}" /* webpackChunkName: "${node.componentChunkName}" */).then(preferDefault)`
     })
     .join(`,\n`)}
 }\n\n`
 
   await Promise.all([
-    writeFile({ filePath: path.join(writeDirectory, `sync-requires.js`), data: syncRequires }),
-    writeFile({ filePath: path.join(writeDirectory, `async-requires.js`), data: asyncRequires }),
+    writeFile({
+      filePath: path.join(writeDirectory, `sync-requires.js`),
+      data: syncRequires,
+    }),
+    writeFile({
+      filePath: path.join(writeDirectory, `async-requires.js`),
+      data: asyncRequires,
+    }),
   ])
 }
 
@@ -91,11 +97,11 @@ exports.onPreBuild = async ({ store }) => {
     const writeDirectory = cacheDirectory({ baseDirectory: directory })
     await fs.mkdirp(writeDirectory)
 
-    store.getState().staticQueryComponents.forEach((value, key) => {
+    store.getState().staticQueryComponents.forEach((value) => {
       promises.push(
         new Promise((resolve, reject) => {
           fs.readFile(path.join(directory, `public`, `static`, `d`, `${value.hash}.json`), `utf-8`)
-            .then(data => {
+            .then((data) => {
               const result = JSON.parse(data)
 
               const definitions = []
@@ -121,20 +127,18 @@ export default (data) => transformSync({json: data, load: ({componentName}) => {
 }})`
                 const filename = `static-query-${value.hash}.js`
 
-                return fs
-                  .writeFile(path.join(writeDirectory, filename), source)
-                  .then(() => {
-                    staticQueries[value.componentPath] = {
-                      ...value,
-                      result,
-                      importPath: `~gatsby-plugin-graphql-component/${filename}`,
-                    }
-                  })
-                  .then(resolve)
+                return fs.writeFile(path.join(writeDirectory, filename), source).then(() => {
+                  staticQueries[value.componentPath] = {
+                    ...value,
+                    result,
+                    importPath: `~gatsby-plugin-graphql-component/${filename}`,
+                  }
+                })
               }
 
               return null
             })
+            .then(resolve)
             .catch(reject)
         })
       )
@@ -163,7 +167,9 @@ exports.onCreateWebpackConfig = ({ store, actions }) => {
     resolve: {
       alias: {
         "~gatsby-plugin-graphql-component-gatsby-cache": path.join(directory, `.cache`),
-        "~gatsby-plugin-graphql-component": cacheDirectory({ baseDirectory: directory }),
+        "~gatsby-plugin-graphql-component": cacheDirectory({
+          baseDirectory: directory,
+        }),
       },
     },
   })
