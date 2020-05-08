@@ -6,6 +6,13 @@ export default props => (
     query={graphql`
       query {
         Tester
+        allSitePage {
+          edges {
+            node {
+              id
+            }
+          }
+        }
       }
     `}
   >

@@ -3,6 +3,13 @@ import React from "react"
 export const pageQuery = graphql`
   query {
     Tester
+    allSitePage {
+      edges {
+        node {
+          id
+        }
+      }
+    }
   }
 `
 
@@ -13,7 +20,7 @@ export default props => {
 
   return (
     <>
-      <Link to="/page2">Page2</Link>
+      <Link to="/test">Test Page</Link>
       Test<br></br>
       <Tester></Tester>
     </>
