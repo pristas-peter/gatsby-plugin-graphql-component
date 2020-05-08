@@ -122,9 +122,23 @@ const map = {
     ${definitions.map(({ componentName }) => `${componentName}`).join(`,`)}
 }
 
-export default (data) => transformSync({json: data, load: ({componentName}) => {
+const cache = new WeakMap()
+
+export default (data) => {
+  const cached = cache.get(data)
+
+  if (cached) {
+    return cached
+  }
+
+  const transformed = transformSync({json: data, load: ({componentName}) => {
     return map[componentName]
-}})`
+  }})
+
+  cache.set(data, transformed)
+
+  return transformed
+}`
                 const filename = `static-query-${value.hash}.js`
 
                 return fs.writeFile(path.join(writeDirectory, filename), source).then(() => {
