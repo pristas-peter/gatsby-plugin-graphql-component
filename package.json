@@ -3,5 +3,8 @@
   "workspaces": [
     "examples/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "lerna": "^3.20.2"
+  }
 }
