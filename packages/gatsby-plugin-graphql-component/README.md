@@ -22,7 +22,7 @@ export const pageQuery = graphql`
     }
   }
 `
-export default props => {
+export default (props) => {
   const { Tester } = props.data
 
   return <Tester></Tester>
@@ -35,7 +35,7 @@ export default props => {
 // src/components/test.js
 import { graphql, useStaticQuery } from "gatsby"
 import React from "react"
-export default props => {
+export default (props) => {
   const { Tester } = useStaticQuery(graphql`
     query {
       Tester
@@ -58,7 +58,7 @@ export default props => {
 // src/components/test.js
 import React from "react"
 import { StaticQuery, graphql } from "gatsby"
-export default props => (
+export default (props) => (
   <StaticQuery
     query={graphql`
       query {
@@ -66,7 +66,7 @@ export default props => (
       }
     `}
   >
-    {data => {
+    {(data) => {
       return <data.Tester></data.Tester>
     }}
   </StaticQuery>
@@ -86,8 +86,8 @@ After installing `gatsby-plugin-graphql-component` you can add it to your plugin
 module.exports = {
   plugins: [
     // ...
-    `gatsby-plugin-graphql-component`
-  ]
+    `gatsby-plugin-graphql-component`,
+  ],
 }
 ```
 
