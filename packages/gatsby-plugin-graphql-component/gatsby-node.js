@@ -4,19 +4,12 @@ const fs = require(`fs-extra`)
 const { GraphQLJSONObject } = require(`graphql-type-json`)
 const { visitor } = require(`./visitor`)
 
-const { name } = require(`./package.json`)
+const { setActions, setStore } = require(`./index`)
+const { ensureWriteDirectory, writeFile } = require(`./output`)
 
-function cacheDirectory({ baseDirectory }) {
-  return path.join(baseDirectory, `.cache`, name)
-}
-
-// writes file to disk only on change/new file (avoids unnecessary rebuilds)
-const writeFile = async ({ filePath, data }) => {
-  const oldData = await fs.readFile(filePath, `utf-8`).catch(() => null)
-
-  if (oldData !== data) {
-    await fs.outputFile(filePath, data)
-  }
+exports.onPreBootstrap = async ({ actions, store }) => {
+  setActions({ actions })
+  setStore({ store })
 }
 
 exports.createSchemaCustomization = ({ actions, schema }) => {
@@ -28,40 +21,34 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
       description: `React component available through GraphQL`,
       serialize: GraphQLJSONObject.serialize,
       parseValue: GraphQLJSONObject.parseValue,
-      parseLiteral: GraphQLJSONObject.parseLiteral,
+      parseLiteral: GraphQLJSONObject.parseLiteral
     }),
     schema.buildObjectType({
-      name: `Component`,
+      name: `GraphQLComponentSource`,
       description: `React component node`,
       fields: {
         componentPath: `String!`,
         componentChunkName: `String!`,
-        componentName: `String!`,
+        componentName: `String!`
       },
-      interfaces: [`Node`],
-    }),
+      interfaces: [`Node`]
+    })
   ])
 }
 
 exports.createPages = async ({ getNodesByType, store }) => {
   const { directory } = store.getState().program
-  const writeDirectory = cacheDirectory({ baseDirectory: directory })
-  await fs.mkdirp(writeDirectory)
+  const writeDirectory = await ensureWriteDirectory({ baseDirectory: directory })
 
-  const nodes = getNodesByType(`Component`)
-
-  // TODO: Remove all "hot" references in this `syncRequires` variable when fast-refresh is the default
-  const hotImport =
-    process.env.GATSBY_HOT_LOADER !== `fast-refresh` ? `const { hot } = require("react-hot-loader/root")` : ``
-  const hotMethod = process.env.GATSBY_HOT_LOADER !== `fast-refresh` ? `hot` : ``
+  const nodes = getNodesByType(`GraphQLComponentSource`)
 
   // Create file with sync requires of components/json files.
-  let syncRequires = `${hotImport}
+  let syncRequires = `
 // prefer default export if available
 const preferDefault = m => m && m.default || m
 \n\n`
   syncRequires += `exports.components = {\n${nodes
-    .map((node) => `  "${node.componentChunkName}": ${hotMethod}(preferDefault(require("${node.componentPath}")))`)
+    .map(node => `  "${node.componentChunkName}": preferDefault(require("${node.componentPath}"))`)
     .join(`,\n`)}
 }\n\n`
 
@@ -69,7 +56,7 @@ const preferDefault = m => m && m.default || m
 
 const preferDefault = m => m && m.default || m
 exports.components = {\n${nodes
-    .map((node) => {
+    .map(node => {
       return `  "${node.componentChunkName}": () => import("${node.componentPath}" /* webpackChunkName: "${node.componentChunkName}" */).then(preferDefault)`
     })
     .join(`,\n`)}
@@ -78,12 +65,12 @@ exports.components = {\n${nodes
   await Promise.all([
     writeFile({
       filePath: path.join(writeDirectory, `sync-requires.js`),
-      data: syncRequires,
+      data: syncRequires
     }),
     writeFile({
       filePath: path.join(writeDirectory, `async-requires.js`),
-      data: asyncRequires,
-    }),
+      data: asyncRequires
+    })
   ])
 }
 
@@ -94,14 +81,13 @@ exports.onPreBuild = async ({ store }) => {
     const promises = []
 
     const { directory } = store.getState().program
-    const writeDirectory = cacheDirectory({ baseDirectory: directory })
-    await fs.mkdirp(writeDirectory)
+    const writeDirectory = await ensureWriteDirectory({ baseDirectory: directory })
 
-    store.getState().staticQueryComponents.forEach((value) => {
+    store.getState().staticQueryComponents.forEach(value => {
       promises.push(
         new Promise((resolve, reject) => {
           fs.readFile(path.join(directory, `public`, `static`, `d`, `${value.hash}.json`), `utf-8`)
-            .then((data) => {
+            .then(data => {
               const result = JSON.parse(data)
 
               const definitions = []
@@ -110,7 +96,7 @@ exports.onPreBuild = async ({ store }) => {
                 json: result,
                 onDefinition: ({ definition }) => {
                   definitions.push(definition)
-                },
+                }
               })
 
               if (definitions.length) {
@@ -145,7 +131,7 @@ export default (data) => {
                   staticQueries[value.componentPath] = {
                     ...value,
                     result,
-                    importPath: `~gatsby-plugin-graphql-component/${filename}`,
+                    importPath: `~gatsby-plugin-graphql-component/${filename}`
                   }
                 })
               }
@@ -163,28 +149,28 @@ export default (data) => {
   }
 }
 
-exports.onCreateBabelConfig = ({ actions, store }) => {
+exports.onCreateBabelConfig = async ({ actions, store }) => {
   const { directory } = store.getState().program
+  const writeDirectory = await ensureWriteDirectory({ baseDirectory: directory })
 
   actions.setBabelPlugin({
     name: require.resolve(`./static-query-babel-plugin`),
     options: {
-      staticQueriesPath: path.join(cacheDirectory({ baseDirectory: directory }), `static-queries.json`),
-    },
+      staticQueriesPath: path.join(writeDirectory, `static-queries.json`)
+    }
   })
 }
 
-exports.onCreateWebpackConfig = ({ store, actions }) => {
+exports.onCreateWebpackConfig = async ({ store, actions }) => {
   const { directory } = store.getState().program
+  const writeDirectory = await ensureWriteDirectory({ baseDirectory: directory })
 
   actions.setWebpackConfig({
     resolve: {
       alias: {
         "~gatsby-plugin-graphql-component-gatsby-cache": path.join(directory, `.cache`),
-        "~gatsby-plugin-graphql-component": cacheDirectory({
-          baseDirectory: directory,
-        }),
-      },
-    },
+        "~gatsby-plugin-graphql-component": writeDirectory
+      }
+    }
   })
 }

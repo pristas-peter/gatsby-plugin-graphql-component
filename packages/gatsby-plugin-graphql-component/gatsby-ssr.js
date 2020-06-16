@@ -14,28 +14,28 @@ export const wrapPageElement = ({ element, props }) => {
     load: ({ componentChunkName }) => {
       componentChunkNames.add(componentChunkName)
       return components[componentChunkName]
-    },
+    }
   })
 
   componentChunkNamesByPage[props.location.pathname] = componentChunkNames
 
   return cloneElement(element, {
     ...props,
-    data,
+    data
   })
 }
 
 export const onRenderBody = ({ pathname, pathPrefix, setHeadComponents }) => {
-  if (process.env.NODE_ENV === "production") {
-    const path = __non_webpack_require__("path")
-    const { cwd } = __non_webpack_require__("process")
+  if (process.env.NODE_ENV === `production`) {
+    const path = __non_webpack_require__(`path`)
+    const { cwd } = __non_webpack_require__(`process`)
 
-    const chunkMap = __non_webpack_require__(path.join(cwd(), "public", "chunk-map.json"))
+    const chunkMap = __non_webpack_require__(path.join(cwd(), `public`, `chunk-map.json`))
 
-    componentChunkNamesByPage[pathname].forEach((componentChunkName) => {
+    componentChunkNamesByPage[pathname].forEach(componentChunkName => {
       chunkMap[componentChunkName]
-        .filter((asset) => asset.endsWith(".js"))
-        .forEach((asset) => {
+        .filter(asset => asset.endsWith(`.js`))
+        .forEach(asset => {
           setHeadComponents([<link as="script" rel="preload" key={asset} href={`${pathPrefix}${asset}`} />])
         })
     })

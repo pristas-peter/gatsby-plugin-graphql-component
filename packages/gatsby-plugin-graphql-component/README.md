@@ -8,8 +8,8 @@ This plugin alows you to register any React component file with the build system
 
 ```js
 // src/pages/test.js
-import { graphql, Link } from "gatsby";
-import React from "react";
+import { graphql, Link } from "gatsby"
+import React from "react"
 export const pageQuery = graphql`
   query {
     Tester
@@ -21,21 +21,21 @@ export const pageQuery = graphql`
       }
     }
   }
-`;
-export default (props) => {
-  const { Tester } = props.data;
+`
+export default props => {
+  const { Tester } = props.data
 
-  return <Tester></Tester>;
-};
+  return <Tester></Tester>
+}
 ```
 
 - using `useStaticQuery` hook
 
 ```js
 // src/components/test.js
-import { graphql, useStaticQuery } from "gatsby";
-import React from "react";
-export default (props) => {
+import { graphql, useStaticQuery } from "gatsby"
+import React from "react"
+export default props => {
   const { Tester } = useStaticQuery(graphql`
     query {
       Tester
@@ -47,18 +47,18 @@ export default (props) => {
         }
       }
     }
-  `);
-  return <Tester></Tester>;
-};
+  `)
+  return <Tester></Tester>
+}
 ```
 
 - using `<StaticQuery/>` component
 
 ```js
 // src/components/test.js
-import React from "react";
-import { StaticQuery, graphql } from "gatsby";
-export default (props) => (
+import React from "react"
+import { StaticQuery, graphql } from "gatsby"
+export default props => (
   <StaticQuery
     query={graphql`
       query {
@@ -66,11 +66,11 @@ export default (props) => (
       }
     `}
   >
-    {(data) => {
-      return <data.Tester></data.Tester>;
+    {data => {
+      return <data.Tester></data.Tester>
     }}
   </StaticQuery>
-);
+)
 ```
 
 ## Installation
@@ -86,9 +86,9 @@ After installing `gatsby-plugin-graphql-component` you can add it to your plugin
 module.exports = {
   plugins: [
     // ...
-    `gatsby-plugin-graphql-component`,
-  ],
-};
+    `gatsby-plugin-graphql-component`
+  ]
+}
 ```
 
 ## Usage for plugin creators
@@ -96,24 +96,27 @@ module.exports = {
 The component file needs to be registered with the plugin by creating a `Component` node. The plugin exports a `createComponentNode` function which you should call during the `sourceNodes` build phase. As a side effect, the component is added to the webpack's build. Then you can extend the schema with `createResolverField` function during the `createResolvers` which will enable the component in the queries.
 
 ```js
-const { createComponent, createResolverField } = require(`gatsby-plugin-graphql-component`)
+const { registerComponent, createResolverField } = require(`gatsby-plugin-graphql-component`)
 
-exports.sourceNodes = ({actions: {createNode}) => {
+exports.sourceNodes = async ({actions: {createNode}) => {
 
-  createNode(createComponentNode({ component: require.resolve(`./src/components/tester`) }))
+  const id = await registerComponent({
+    component: require.resolve(`./src/components/tester`)
+  })
+
+  // store this id somewhere for later (preferably in the sourced node as a field when using `createNode` or `createNodeField`)
 }
 
 exports.createResolvers = ({ createResolvers }) => {
   const resolvers = {
     Query: {
-      // make sure you use the same path as in sourceNodes phase as it is treated as component id
-      Tester: createResolverField({ component: require.resolve(`./src/components/tester`) }),
+      // create Tester field on root Query which using the `createResolverField` helper function
+      // it takes resolve as an argument which is an async function which should return the id returned from `registerComponent`
+      Tester: createResolverField({ resolve: async (source, args, context, info) => source.idReturnedFromRegisterComponent }),
     },
   }
   createResolvers(resolvers)
 }
-
-
 ```
 
 ## Supported features
