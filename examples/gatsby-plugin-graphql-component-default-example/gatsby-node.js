@@ -1,9 +1,6 @@
 const path = require(`path`)
 const { createFilePath } = require(`gatsby-source-filesystem`)
-const {
-  createComponentNode,
-  createResolverField,
-} = require(`gatsby-plugin-graphql-component`)
+const { registerComponent, createResolverField } = require(`gatsby-plugin-graphql-component`)
 
 exports.createPages = async ({ graphql, actions }) => {
   const { createPage } = actions
@@ -12,10 +9,7 @@ exports.createPages = async ({ graphql, actions }) => {
   const result = await graphql(
     `
       {
-        allMarkdownRemark(
-          sort: { fields: [frontmatter___date], order: DESC }
-          limit: 1000
-        ) {
+        allMarkdownRemark(sort: { fields: [frontmatter___date], order: DESC }, limit: 1000) {
           edges {
             node {
               fields {
@@ -67,19 +61,19 @@ exports.onCreateNode = ({ node, actions, getNode }) => {
   }
 }
 
-exports.sourceNodes = ({ actions }) => {
-  actions.createNode(
-    createComponentNode({
-      component: require.resolve(`./src/components/tester`),
-    })
-  )
+let id = null
+
+exports.sourceNodes = async ({ actions }) => {
+  id = await registerComponent({
+    component: require.resolve(`./src/components/tester`),
+  })
 }
 
 exports.createResolvers = ({ createResolvers }) => {
   const resolvers = {
     Query: {
       Tester: createResolverField({
-        component: require.resolve(`./src/components/tester`),
+        resolve: async () => id,
       }),
     },
   }
