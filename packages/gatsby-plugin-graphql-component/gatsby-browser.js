@@ -19,7 +19,7 @@ export const onClientEntry = async () => {
           result,
           transformSync({
             json: result,
-            load: ({ componentChunkName }) => syncRequires.components[componentChunkName],
+            load: ({ componentChunkName }) => syncRequires.components[componentChunkName]
           })
         )
       }
@@ -39,18 +39,25 @@ export const onClientEntry = async () => {
 
   const { loadPage } = loader
 
+  const cache = new WeakMap()
+
   // patch query json result in loadPage
   loader.loadPage = async (...args) => {
     const result = await loadPage(...args)
 
+    if (cache.has(result)) {
+      return result
+    }
+
     if (result && result.json && result.json.data) {
-      Object.assign(
-        result.json.data,
-        await transform({
-          json: result.json.data,
-          load: ({ componentChunkName }) => components[componentChunkName](),
-        })
-      )
+      result.json.data = await transform({
+        json: result.json.data,
+        load: ({ componentChunkName }) => {
+          return components[componentChunkName]()
+        }
+      })
+
+      cache.set(result, true)
     }
 
     return result
