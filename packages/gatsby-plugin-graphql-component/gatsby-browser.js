@@ -14,11 +14,11 @@ export const onClientEntry = async () => {
     const emitter = window.___emitter
 
     const onResult = ({ result }) => {
-      if (result && result.data) {
+      if (result) {
         Object.assign(
-          result.data,
+          result,
           transformSync({
-            json: result.data,
+            json: result,
             load: ({ componentChunkName }) => syncRequires.components[componentChunkName],
           })
         )
