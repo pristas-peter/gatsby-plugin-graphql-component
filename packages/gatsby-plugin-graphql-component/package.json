@@ -22,7 +22,7 @@
     "graphql-query-components"
   ],
   "peerDependencies": {
-    "gatsby": ">2.21.11"
+    "gatsby": ">2.23.0"
   },
   "repository": {
     "type": "git",
