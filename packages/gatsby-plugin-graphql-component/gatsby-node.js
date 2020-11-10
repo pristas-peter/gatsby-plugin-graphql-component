@@ -86,7 +86,7 @@ exports.onPreBuild = async ({ store }) => {
     store.getState().staticQueryComponents.forEach(value => {
       promises.push(
         new Promise((resolve, reject) => {
-          fs.readFile(path.join(directory, `public`, `static`, `d`, `${value.hash}.json`), `utf-8`)
+          fs.readFile(path.join(directory, `public`, `page-data`, `sq`, `d`, `${value.hash}.json`), `utf-8`)
             .then(data => {
               const result = JSON.parse(data)
 
