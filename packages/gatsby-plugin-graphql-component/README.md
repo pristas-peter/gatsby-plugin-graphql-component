@@ -98,7 +98,7 @@ The component file needs to be registered with the plugin by creating a `Compone
 ```js
 const { registerComponent, createResolverField } = require(`gatsby-plugin-graphql-component`)
 
-exports.sourceNodes = async ({actions: {createNode}) => {
+exports.sourceNodes = async ({ actions: { createNode } }) => {
 
   const id = await registerComponent({
     component: require.resolve(`./src/components/tester`)
