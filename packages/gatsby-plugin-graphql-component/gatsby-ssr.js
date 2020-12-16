@@ -1,6 +1,6 @@
 import { components } from "~gatsby-plugin-graphql-component/sync-requires"
-import { cloneElement } from "react"
-import React from "react"
+import React, { cloneElement } from "react"
+import { withPrefix } from "gatsby"
 import { transformSync } from "./transform"
 
 const componentChunkNamesByPage = {}
@@ -25,18 +25,18 @@ export const wrapPageElement = ({ element, props }) => {
   })
 }
 
-export const onRenderBody = ({ pathname, pathPrefix, setHeadComponents }) => {
+export const onRenderBody = ({ pathname, setHeadComponents }) => {
   if (process.env.NODE_ENV === `production`) {
     const path = __non_webpack_require__(`path`)
     const { cwd } = __non_webpack_require__(`process`)
 
     const chunkMap = __non_webpack_require__(path.join(cwd(), `public`, `chunk-map.json`))
 
-    componentChunkNamesByPage[pathname].forEach(componentChunkName => {
+    componentChunkNamesByPage[withPrefix(pathname)].forEach(componentChunkName => {
       chunkMap[componentChunkName]
         .filter(asset => asset.endsWith(`.js`))
         .forEach(asset => {
-          setHeadComponents([<link as="script" rel="preload" key={asset} href={`${pathPrefix}${asset}`} />])
+          setHeadComponents([<link as="script" rel="preload" key={asset} href={withPrefix(asset)} />])
         })
     })
   }
